@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 import robot_utils as utils
 import json
+import numpy as np
 from slot_manager import SlotManager
 from logger import Logger
-from PyQt5.QtWidgets import QMessageBox, QFileDialog
-from PyQt5.QtCore import QTimer
+from position_command_layout import Ui_position_command_layout
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QDialog
+from PyQt5.QtCore import QTimer, Qt
+from types import SimpleNamespace
 
 
 def show_message(short_message, detailed_message="",
@@ -19,6 +22,43 @@ def show_message(short_message, detailed_message="",
     return msg_box.exec_()
 
 
+def fillGoalPosition(relative_state, dialog_layout, robot):
+    if relative_state != Qt.Checked:
+        # Fill default values
+        xyzab = json.loads(robot.position('xyzab'))
+        xyzab = [0.0 if val is None else val for val in xyzab]
+    else:
+        xyzab = [0.0]*5
+    dialog_layout.goal_x.setText('{0:.2f}'.format(xyzab[0]))
+    dialog_layout.goal_y.setText('{0:.2f}'.format(xyzab[1]))
+    dialog_layout.goal_z.setText('{0:.2f}'.format(xyzab[2]))
+    dialog_layout.goal_a.setText('{0:.2f}'.format(xyzab[3]))
+    dialog_layout.goal_b.setText('{0:.2f}'.format(xyzab[4]))
+
+
+def create_position_dialog(robot):
+    goal_position_dialog = QDialog()
+    dialog_layout = Ui_position_command_layout()
+    dialog_layout.setupUi(goal_position_dialog)
+    dialog_layout.relative.stateChanged.connect(lambda x: fillGoalPosition(
+        x, dialog_layout, robot))
+    fillGoalPosition(Qt.Unchecked, dialog_layout, robot)
+    button_input = goal_position_dialog.exec_()
+    if button_input == QDialog.Accepted:
+        result = SimpleNamespace()
+        result.xyzab = [float(dialog_layout.goal_x.text()),
+                        float(dialog_layout.goal_y.text()),
+                        float(dialog_layout.goal_z.text()),
+                        float(dialog_layout.goal_a.text()),
+                        float(dialog_layout.goal_b.text())]
+        result.movement = 1 if dialog_layout.relative.checkState() == Qt.Checked else 0
+        dialog_speed = float(dialog_layout.goal_speed.text())
+        result.speed = None if dialog_speed == 0 else dialog_speed
+        return result
+    else:
+        return None
+
+
 class GUILogic(object):
     def __init__(self, gui_layout, gui_window, dorna_robot):
         self.gui_layout = gui_layout
@@ -29,6 +69,7 @@ class GUILogic(object):
         self.status_timer = QTimer(self.gui_window)
         Logger.initialize(self.gui_layout.log_box)
         SlotManager.set_update_robot_status_fn(self.reset_stop_flag)
+        SlotManager.set_status_check_fn(self.status_check)
         # Connect all signals and slots
         gui_layout.stop_action.clicked.connect(self.stop_action_clicked)
         gui_layout.home_action.clicked.connect(SlotManager(
@@ -44,6 +85,9 @@ class GUILogic(object):
             initialize_fcn=lambda: QFileDialog.getOpenFileName(
                 caption="Choose CNC File",
                 filter="Cnc Files(*.cnc *.txt)")))
+        gui_layout.position_action.clicked.connect(SlotManager(
+            self.position_action_clicked,
+            initialize_fcn=lambda: create_position_dialog(self.robot)))
         gui_layout.connect_arm.clicked.connect(self.connect_arm_clicked)
         self.status_timer.timeout.connect(self.update_status)
         # Start timers
@@ -87,6 +131,7 @@ class GUILogic(object):
         self.gui_layout.state_z.setText('{0:.4f}'.format(xyzab[2]))
         self.gui_layout.state_a.setText('{0:.4f}'.format(xyzab[3]))
         self.gui_layout.state_b.setText('{0:.4f}'.format(xyzab[4]))
+        # Set angles
         angles = json.loads(self.robot.position('joint'))
         angles = [0.0 if val is None else val for val in angles]
         self.gui_layout.state_j0.setText('{0:.2f}'.format(angles[0]))
@@ -107,7 +152,15 @@ class GUILogic(object):
             show_message("Cannot connect to robot: {}".format(json_status),
                          message_type=QMessageBox.Warning,
                          get_response=False)
+            Logger.log("Failed to connect to port")
         else:
+            show_message(("Successfully connected to robot!"
+                          " Please calibrate if u recently "
+                          "power cycled the arm"),
+                         message_type=QMessageBox.Information,
+                         get_response=False)
+            Logger.log("Connected!")
+            Logger.log("Please calibrate if not already calibrated!")
             self.robot_connected = True
 
     def stop_action_clicked(self, _):
@@ -121,13 +174,18 @@ class GUILogic(object):
         else:
             Logger.log("Cancelling command")
 
-    def home_action_clicked(self, _):
-        if self.status_check():
-            Logger.log("GuiManager: Going home")
-            result = utils.goHome(self.robot, j3=-19, j4=70)
-            utils.blockUntilComplete(self.robot, result)
+    def position_action_clicked(self, _, user_input):
+        if user_input is not None:
+            Logger.log("Sending position command: ", user_input)
+            utils.move(self.robot, user_input.xyzab,
+                       movement=user_input.movement, speed=user_input.speed)
         else:
-            Logger.log("GuiManager: Status check failed")
+            Logger.log("User cancelled input")
+
+    def home_action_clicked(self, _):
+        Logger.log("GuiManager: Going home")
+        result = utils.goHome(self.robot, j3=-19, j4=70)
+        utils.blockUntilComplete(self.robot, result)
 
     def gcode_action_clicked(self, _, user_input):
         if len(user_input) == 2 and len(user_input[0]) != 0:

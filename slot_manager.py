@@ -26,8 +26,10 @@ class SlotManager(object):
     """
     _timer_busy = False
     _update_robot_status_fn = None
+    _status_check_fn = None
 
-    def __init__(self, slot_function, lock_timer=True, initialize_fcn=None):
+    def __init__(self, slot_function, lock_timer=True,
+                 initialize_fcn=None):
         """
         Pass no_message as one of kwargs if you want to avoid showing a message
         """
@@ -35,10 +37,15 @@ class SlotManager(object):
         self.lock_timer = lock_timer
         self.initialize_fcn = initialize_fcn
         self.thread = None
+        assert self._status_check_fn is not None
 
     @classmethod
     def set_update_robot_status_fn(self, update_robot_status_fn):
         self._update_robot_status_fn = update_robot_status_fn
+
+    @classmethod
+    def set_status_check_fn(self, status_check_fn):
+        self._status_check_fn = status_check_fn
 
     def __call__(self, *args, **kwargs):
         """
@@ -47,20 +54,23 @@ class SlotManager(object):
         """
 
         if self.lock_timer and SlotManager._timer_busy:
-            Logger.log("Timer: Robot is currently busy!"
+            Logger.log("SlotManager: Robot is currently busy!"
                        "So cannot execute the commanded slot!")
-            return
         else:
-            SlotManager._timer_busy = True
-            if self.initialize_fcn is not None:
-                kwargs['user_input'] = self.initialize_fcn()
-
-            # Define slot function wrapper
-            def slot_function_wrapper():
-                self.slot_function(*args, **kwargs)
-                SlotManager._timer_busy = False
-
             if self._update_robot_status_fn is not None:
                 self._update_robot_status_fn()
-            self.thread = ThreadWrapper(slot_function_wrapper)
-            self.thread.start()
+
+            if not self._status_check_fn():
+                Logger.log("SlotManager: Robot status failed")
+            else:
+                SlotManager._timer_busy = True
+                if self.initialize_fcn is not None:
+                    kwargs['user_input'] = self.initialize_fcn()
+
+                # Define slot function wrapper
+                def slot_function_wrapper():
+                    self.slot_function(*args, **kwargs)
+                    SlotManager._timer_busy = False
+
+                self.thread = ThreadWrapper(slot_function_wrapper)
+                self.thread.start()
