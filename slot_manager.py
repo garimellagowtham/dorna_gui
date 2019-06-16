@@ -29,7 +29,7 @@ class SlotManager(object):
     _status_check_fn = None
 
     def __init__(self, slot_function, lock_timer=True,
-                 initialize_fcn=None):
+                 initialize_fcn=None, exit_fcn=None):
         """
         Pass no_message as one of kwargs if you want to avoid showing a message
         """
@@ -37,6 +37,7 @@ class SlotManager(object):
         self.lock_timer = lock_timer
         self.initialize_fcn = initialize_fcn
         self.thread = None
+        self.exit_fcn = exit_fcn
         assert self._status_check_fn is not None
 
     @classmethod
@@ -72,5 +73,11 @@ class SlotManager(object):
                     self.slot_function(*args, **kwargs)
                     SlotManager._timer_busy = False
 
+                def exit_function_wrapper():
+                    print("Finished thread!!")
+                    self.exit_fcn(*args, **kwargs)
+
                 self.thread = ThreadWrapper(slot_function_wrapper)
+                if self.exit_fcn is not None:
+                    self.thread.finished.connect(exit_function_wrapper)
                 self.thread.start()

@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 import robot_utils as utils
 import json
-import numpy as np
 from slot_manager import SlotManager
 from logger import Logger
 from position_command_layout import Ui_position_command_layout
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QDialog
 from PyQt5.QtCore import QTimer, Qt
 from types import SimpleNamespace
+import vegetable_cutting_utils as cutting_utils
 
 
 def show_message(short_message, detailed_message="",
@@ -70,6 +70,10 @@ class GUILogic(object):
         Logger.initialize(self.gui_layout.log_box)
         SlotManager.set_update_robot_status_fn(self.reset_stop_flag)
         SlotManager.set_status_check_fn(self.status_check)
+        # Create a slot manager that performs a single cut
+        self.vegetable_cut_slot_manager = SlotManager(
+            self.vegetable_cut_action_processing,
+            exit_fcn=self.vegetable_cut_action_process_exit)
         # Connect all signals and slots
         gui_layout.stop_action.clicked.connect(self.stop_action_clicked)
         gui_layout.home_action.clicked.connect(SlotManager(
@@ -88,6 +92,10 @@ class GUILogic(object):
         gui_layout.position_action.clicked.connect(SlotManager(
             self.position_action_clicked,
             initialize_fcn=lambda: create_position_dialog(self.robot)))
+        gui_layout.vegetable_cut_action.clicked.connect(SlotManager(
+            self.vegetable_cut_action_positioning,
+            initialize_fcn=cutting_utils.create_vegetable_cutting_dialog,
+            exit_fcn=self.vegetable_cut_action_process_exit))
         gui_layout.connect_arm.clicked.connect(self.connect_arm_clicked)
         self.status_timer.timeout.connect(self.update_status)
         # Start timers
@@ -181,6 +189,32 @@ class GUILogic(object):
                        movement=user_input.movement, speed=user_input.speed)
         else:
             Logger.log("User cancelled input")
+
+    def vegetable_cut_action_positioning(self, _, user_input):
+        if user_input is not None:
+            Logger.log("Positioning to cut: ", user_input.origin)
+            z_offset = 11.0 - user_input.origin[2]
+            assert z_offset > 0
+            utils.hopThroughWaypoint(self.robot, user_input.origin, z_offset,
+                                     user_input.cut_speed)
+        else:
+            Logger.log("User cancelled input")
+
+    def vegetable_cut_action_processing(self, _, user_input):
+        if user_input is not None:
+            Logger.log("Performing a single cut")
+            cutting_utils.perform_single_cut_action(
+                self.robot, self.status_check, user_input)
+        else:
+            Logger.log("User cancelled input")
+
+    def vegetable_cut_action_process_exit(self, button_status, user_input):
+        user_proceed = show_message(
+            "Ready to cut?", message_type=QMessageBox.Warning)
+        if user_proceed == QMessageBox.Ok:
+            self.vegetable_cut_slot_manager(button_status, user_input)
+        else:
+            Logger.log("Finished Cutting!")
 
     def home_action_clicked(self, _):
         Logger.log("GuiManager: Going home")

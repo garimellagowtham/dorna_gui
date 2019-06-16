@@ -43,7 +43,8 @@ def hopThroughWaypoint(robot, goal, z_offset=12, speed=100):
     waypoint = goal.copy()
     waypoint[2] = waypoint[2] + z_offset
     move(robot, waypoint, speed=speed)
-    move(robot, [0, 0, -z_offset, 0, 0], movement=1, speed=speed)
+    res = move(robot, [0, 0, -z_offset, 0, 0], movement=1, speed=speed)
+    blockUntilComplete(robot, res)
 
 
 def goHome(robot, j3=0, j4=20):
