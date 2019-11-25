@@ -4,6 +4,7 @@ import json
 from slot_manager import SlotManager
 from logger import Logger
 from position_command_layout import Ui_position_command_layout
+from servo_layout import Ui_servo_layout
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QDialog
 from PyQt5.QtCore import QTimer, Qt
 from types import SimpleNamespace
@@ -58,12 +59,24 @@ def create_position_dialog(robot):
     else:
         return None
 
+def create_servo_dialog(robot):
+    servo_dialog =QDialog()
+    servo_layout = Ui_servo_layout()
+    servo_layout.setupUi(servo_dialog)
+    if robot.servo_position > 0:
+        servo_layout.servo_slider.setSliderPosition(robot.servo_position)
+    button_input = servo_dialog.exec_()
+    if button_input== QDialog.Accepted:
+        return servo_layout.servo_slider.sliderPosition()
+    return None
 
 class GUILogic(object):
     def __init__(self, gui_layout, gui_window, dorna_robot):
         self.gui_layout = gui_layout
         self.gui_window = gui_window
         self.robot = dorna_robot
+        # Adding servo location to robot for easy access
+        self.robot.servo_position = -1
         self.robot_connected = False
         self.robot_stopped = False
         self.status_timer = QTimer(self.gui_window)
@@ -92,6 +105,9 @@ class GUILogic(object):
         gui_layout.position_action.clicked.connect(SlotManager(
             self.position_action_clicked,
             initialize_fcn=lambda: create_position_dialog(self.robot)))
+        gui_layout.servo_action.clicked.connect(SlotManager(
+            self.servo_action_clicked,
+            initialize_fcn=lambda: create_servo_dialog(self.robot)))
         gui_layout.vegetable_cut_action.clicked.connect(SlotManager(
             self.vegetable_cut_action_positioning,
             initialize_fcn=cutting_utils.create_vegetable_cutting_dialog,
@@ -220,6 +236,13 @@ class GUILogic(object):
         Logger.log("GuiManager: Going home")
         result = utils.goHome(self.robot, j3=-19, j4=70)
         utils.blockUntilComplete(self.robot, result)
+
+    def servo_action_clicked(self, _, user_input):
+        if user_input is not None:
+            Logger.log("GuiManager: Setting servo: {}".format(user_input))
+            self.robot.servo(float(user_input))
+            self.robot.servo_position = user_input
+
 
     def gcode_action_clicked(self, _, user_input):
         if len(user_input) == 2 and len(user_input[0]) != 0:

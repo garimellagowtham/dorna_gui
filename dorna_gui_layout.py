@@ -8,7 +8,6 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-
 class Ui_dorna_main_gui(object):
     def setupUi(self, dorna_main_gui):
         dorna_main_gui.setObjectName("dorna_main_gui")
@@ -26,12 +25,10 @@ class Ui_dorna_main_gui(object):
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.image_label = QtWidgets.QLabel(self.scrollAreaWidgetContents)
         self.image_label.setGeometry(QtCore.QRect(0, 10, 331, 251))
-        sizePolicy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(
-            self.image_label.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(self.image_label.sizePolicy().hasHeightForWidth())
         self.image_label.setSizePolicy(sizePolicy)
         self.image_label.setText("")
         self.image_label.setScaledContents(True)
@@ -55,12 +52,10 @@ class Ui_dorna_main_gui(object):
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.status_label = QtWidgets.QLabel(self.centralwidget)
-        sizePolicy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(
-            self.status_label.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(self.status_label.sizePolicy().hasHeightForWidth())
         self.status_label.setSizePolicy(sizePolicy)
         self.status_label.setMaximumSize(QtCore.QSize(16777215, 20))
         self.status_label.setObjectName("status_label")
@@ -131,7 +126,7 @@ class Ui_dorna_main_gui(object):
         self.action_grid.setObjectName("action_grid")
         self.vegetable_cut_action = QtWidgets.QPushButton(self.centralwidget)
         self.vegetable_cut_action.setObjectName("vegetable_cut_action")
-        self.action_grid.addWidget(self.vegetable_cut_action, 2, 0, 1, 1)
+        self.action_grid.addWidget(self.vegetable_cut_action, 5, 0, 1, 1)
         self.action_label = QtWidgets.QLabel(self.centralwidget)
         font = QtGui.QFont()
         font.setPointSize(14)
@@ -141,23 +136,21 @@ class Ui_dorna_main_gui(object):
         self.action_grid.addWidget(self.action_label, 0, 0, 1, 1)
         self.calibrate_action = QtWidgets.QPushButton(self.centralwidget)
         self.calibrate_action.setObjectName("calibrate_action")
-        self.action_grid.addWidget(self.calibrate_action, 2, 1, 1, 1)
+        self.action_grid.addWidget(self.calibrate_action, 5, 1, 1, 1)
         self.home_action = QtWidgets.QPushButton(self.centralwidget)
         self.home_action.setObjectName("home_action")
-        self.action_grid.addWidget(self.home_action, 0, 3, 1, 1)
+        self.action_grid.addWidget(self.home_action, 0, 4, 1, 1)
         self.gcode_action = QtWidgets.QPushButton(self.centralwidget)
         self.gcode_action.setObjectName("gcode_action")
-        self.action_grid.addWidget(self.gcode_action, 2, 2, 1, 1)
+        self.action_grid.addWidget(self.gcode_action, 5, 2, 1, 1)
         self.position_action = QtWidgets.QPushButton(self.centralwidget)
         self.position_action.setObjectName("position_action")
-        self.action_grid.addWidget(self.position_action, 2, 3, 1, 1)
+        self.action_grid.addWidget(self.position_action, 5, 4, 1, 1)
         self.stop_action = QtWidgets.QPushButton(self.centralwidget)
-        sizePolicy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(
-            self.stop_action.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(self.stop_action.sizePolicy().hasHeightForWidth())
         self.stop_action.setSizePolicy(sizePolicy)
         self.stop_action.setMaximumSize(QtCore.QSize(160, 100))
         font = QtGui.QFont()
@@ -165,6 +158,9 @@ class Ui_dorna_main_gui(object):
         self.stop_action.setFont(font)
         self.stop_action.setObjectName("stop_action")
         self.action_grid.addWidget(self.stop_action, 0, 1, 1, 2)
+        self.servo_action = QtWidgets.QPushButton(self.centralwidget)
+        self.servo_action.setObjectName("servo_action")
+        self.action_grid.addWidget(self.servo_action, 6, 0, 1, 1)
         self.gridLayout.addLayout(self.action_grid, 2, 1, 1, 1)
         self.image_text_label = QtWidgets.QLabel(self.centralwidget)
         self.image_text_label.setObjectName("image_text_label")
@@ -179,14 +175,12 @@ class Ui_dorna_main_gui(object):
 
     def retranslateUi(self, dorna_main_gui):
         _translate = QtCore.QCoreApplication.translate
-        dorna_main_gui.setWindowTitle(
-            _translate("dorna_main_gui", "MainWindow"))
+        dorna_main_gui.setWindowTitle(_translate("dorna_main_gui", "MainWindow"))
         self.arm_port_label.setText(_translate("dorna_main_gui", "Arm Port"))
         self.arm_port.setText(_translate("dorna_main_gui", "/dev/ttyACM0"))
         self.connect_arm.setText(_translate("dorna_main_gui", "Connect"))
         self.status_label.setText(_translate("dorna_main_gui", "Status"))
-        self.connection_status_label.setText(
-            _translate("dorna_main_gui", "Disconnected"))
+        self.connection_status_label.setText(_translate("dorna_main_gui", "Disconnected"))
         self.robot_status_label.setText(_translate("dorna_main_gui", "Ready"))
         self.label_5.setText(_translate("dorna_main_gui", "Joints"))
         self.label_4.setText(_translate("dorna_main_gui", "Position"))
@@ -201,13 +195,13 @@ class Ui_dorna_main_gui(object):
         self.state_j3.setText(_translate("dorna_main_gui", "0"))
         self.state_a.setText(_translate("dorna_main_gui", "0"))
         self.log_label.setText(_translate("dorna_main_gui", "Log"))
-        self.vegetable_cut_action.setText(
-            _translate("dorna_main_gui", "Vegetable"))
+        self.vegetable_cut_action.setText(_translate("dorna_main_gui", "Vegetable"))
         self.action_label.setText(_translate("dorna_main_gui", "Commands"))
-        self.calibrate_action.setText(
-            _translate("dorna_main_gui", "Calibrate"))
+        self.calibrate_action.setText(_translate("dorna_main_gui", "Calibrate"))
         self.home_action.setText(_translate("dorna_main_gui", "GoHome"))
         self.gcode_action.setText(_translate("dorna_main_gui", "Gcode"))
         self.position_action.setText(_translate("dorna_main_gui", "Position"))
         self.stop_action.setText(_translate("dorna_main_gui", "STOP"))
+        self.servo_action.setText(_translate("dorna_main_gui", "Servo"))
         self.image_text_label.setText(_translate("dorna_main_gui", "Image"))
+
